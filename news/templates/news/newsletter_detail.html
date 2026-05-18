@@ -1,0 +1,45 @@
+{% extends "news/base.html" %}
+{% block title %}{{ newsletter.title }}{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm mb-3">
+    <div class="card-body">
+        <h1>{{ newsletter.title }}</h1>
+        <p class="text-muted">
+            By {{ newsletter.author.username }}
+            {% if newsletter.publisher %} · {{ newsletter.publisher.name }}{% endif %}
+            · {{ newsletter.created_at|date:"d M Y" }}
+        </p>
+        <p>{{ newsletter.description|linebreaks }}</p>
+    </div>
+</div>
+
+<h4>Articles in this newsletter</h4>
+{% if newsletter.articles.all %}
+    <ul class="list-group">
+        {% for article in newsletter.articles.all %}
+            <li class="list-group-item">
+                <a href="{% url 'article-detail' article.pk %}"
+                   class="text-decoration-none">{{ article.title }}</a>
+                <small class="text-muted">
+                    · {{ article.author.username }}
+                </small>
+            </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p class="text-muted">No articles in this newsletter yet.</p>
+{% endif %}
+
+<div class="mt-3">
+    <a href="{% url 'newsletter-list' %}" class="btn btn-outline-secondary">
+        ← Back to newsletters
+    </a>
+    {% if user.is_editor or newsletter.author == user %}
+        <a href="{% url 'newsletter-update' newsletter.pk %}"
+           class="btn btn-secondary">Edit</a>
+        <a href="{% url 'newsletter-delete' newsletter.pk %}"
+           class="btn btn-outline-danger">Delete</a>
+    {% endif %}
+</div>
+{% endblock %}

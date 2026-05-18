@@ -1,0 +1,35 @@
+{% extends "news/base.html" %}
+{% block title %}Editor dashboard{% endblock %}
+
+{% block content %}
+<h2 class="mb-3">Editor dashboard</h2>
+<p class="text-muted">Articles awaiting approval.</p>
+
+{% if pending_articles %}
+    <ul class="list-group">
+        {% for article in pending_articles %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-1">
+                        <a href="{% url 'article-detail' article.pk %}"
+                           class="text-decoration-none">{{ article.title }}</a>
+                    </h5>
+                    <small class="text-muted">
+                        By {{ article.author.username }}
+                        {% if article.publisher %} · {{ article.publisher.name }}{% endif %}
+                        · submitted {{ article.created_at|date:"d M Y H:i" }}
+                    </small>
+                </div>
+                <div>
+                    <a href="{% url 'article-approve' article.pk %}"
+                       class="btn btn-success btn-sm">Approve</a>
+                    <a href="{% url 'article-delete' article.pk %}"
+                       class="btn btn-outline-danger btn-sm">Reject</a>
+                </div>
+            </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <div class="alert alert-info">Nothing pending. Good job!</div>
+{% endif %}
+{% endblock %}

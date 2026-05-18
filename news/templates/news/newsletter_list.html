@@ -1,0 +1,33 @@
+{% extends "news/base.html" %}
+{% block title %}Newsletters{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Newsletters</h2>
+    {% if user.is_authenticated and user.is_journalist %}
+        <a href="{% url 'newsletter-create' %}" class="btn btn-success">
+            + New newsletter
+        </a>
+    {% endif %}
+</div>
+
+{% if newsletters %}
+    <ul class="list-group">
+        {% for nl in newsletters %}
+            <li class="list-group-item">
+                <h5 class="mb-1">
+                    <a href="{% url 'newsletter-detail' nl.pk %}"
+                       class="text-decoration-none">{{ nl.title }}</a>
+                </h5>
+                <small class="text-muted">
+                    By {{ nl.author.username }}
+                    {% if nl.publisher %} · {{ nl.publisher.name }}{% endif %}
+                    · {{ nl.articles.count }} article{{ nl.articles.count|pluralize }}
+                </small>
+            </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p class="text-muted">No newsletters yet.</p>
+{% endif %}
+{% endblock %}

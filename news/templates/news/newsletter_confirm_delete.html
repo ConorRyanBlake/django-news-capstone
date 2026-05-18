@@ -1,0 +1,18 @@
+{% extends "news/base.html" %}
+{% block title %}Delete newsletter{% endblock %}
+
+{% block content %}
+<div class="card border-danger">
+    <div class="card-body">
+        <h3 class="card-title text-danger">Delete newsletter</h3>
+        <p>Are you sure you want to delete
+            "<strong>{{ object.title }}</strong>"?</p>
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">Yes, delete</button>
+            <a href="{% url 'newsletter-detail' object.pk %}"
+               class="btn btn-outline-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

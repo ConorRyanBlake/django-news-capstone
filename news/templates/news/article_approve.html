@@ -1,0 +1,28 @@
+{% extends "news/base.html" %}
+{% block title %}Approve article{% endblock %}
+
+{% block content %}
+<div class="card border-success">
+    <div class="card-body">
+        <h3 class="card-title text-success">Approve article</h3>
+        <p>You are about to approve:</p>
+        <div class="bg-light p-3 mb-3 rounded">
+            <strong>{{ article.title }}</strong><br>
+            <small class="text-muted">
+                By {{ article.author.username }}
+                {% if article.publisher %} · {{ article.publisher.name }}{% endif %}
+            </small>
+        </div>
+        <p>Approving publishes this article and (in Phase 7) will notify
+           all subscribers by email and post a link to X.</p>
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success">
+                Yes, approve and publish
+            </button>
+            <a href="{% url 'editor-dashboard' %}"
+               class="btn btn-outline-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}
