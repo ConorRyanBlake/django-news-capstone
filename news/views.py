@@ -25,7 +25,7 @@ from django.views.generic import (
 )
 
 from .forms import RegistrationForm
-from .models import Article, Newsletter, Publisher
+from .models import Article, Newsletter
 
 # ---------------------------------------------------------------------
 # Authentication
