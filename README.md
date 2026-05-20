@@ -46,19 +46,21 @@ Level 2 course.
 
 ### Role permission matrix
 
-| Action                    | Reader | Journalist | Editor |
-|---------------------------|:------:|:----------:|:------:|
-| View approved articles    |   ✓    |     ✓      |   ✓    |
-| View own draft articles   |        |     ✓      |   ✓    |
-| View all draft articles   |        |            |   ✓    |
-| Create article            |        |     ✓      |        |
-| Edit own article          |        |     ✓      |   ✓    |
-| Edit any article          |        |            |   ✓    |
-| Delete own article        |        |     ✓      |   ✓    |
-| Delete any article        |        |            |   ✓    |
-| Approve article           |        |            |   ✓    |
-| Subscribe to publisher    |   ✓    |            |        |
-| Subscribe to journalist   |   ✓    |            |        |
+| Action                          | Reader | Journalist | Editor |
+|---------------------------------|:------:|:----------:|:------:|
+| View approved articles          |   ✓    |     ✓      |   ✓    |
+| View own draft articles         |        |     ✓      |   ✓    |
+| View all draft articles         |        |            |   ✓    |
+| Create article                  |        |     ✓      |        |
+| Edit own article (drafts too)   |        |     ✓      |   ✓    |
+| Edit any article                |        |            |   ✓    |
+| Delete own article (drafts too) |        |     ✓      |   ✓    |
+| Delete any article              |        |            |   ✓    |
+| Approve article                 |        |            |   ✓    |
+| View publishers                 |   ✓    |     ✓      |   ✓    |
+| Create / edit / delete publisher|        |            |   ✓    |
+| Subscribe to publisher          |   ✓    |            |        |
+| Subscribe to journalist         |   ✓    |            |        |
 
 ---
 
@@ -73,7 +75,7 @@ Level 2 course.
 ### 1. Clone and create a virtual environment
 
 ```bash
-git clone https://github.com//news-platform.git
+git clone https://github.com/ConorRyanBlake/django-news-capstone
 cd news-platform
 python -m venv venv
 
@@ -144,6 +146,8 @@ Visit `http://127.0.0.1:8000/`.
 - `/` — home page with latest approved articles
 - `/articles/` — full article listing (readers see subscribed content)
 - `/newsletters/` — newsletter listing
+- `/publishers/` — publisher listing (editors can create / edit / delete)
+- `/journalist/` — journalist's dashboard with own drafts and published articles
 - `/editor/` — pending-articles dashboard (editor only)
 - `/accounts/login/`, `/register/` — auth
 - `/admin/` — Django admin
@@ -159,7 +163,7 @@ Obtain a JWT:
 ```bash
 curl -X POST http://127.0.0.1:8000/api/token/ \
     -H "Content-Type: application/json" \
-    -d '{"username": "", "password": ""}'
+    -d '{"username": "your_username", "password": "your_password"}'
 ```
 
 Response:
@@ -172,7 +176,7 @@ Include the access token in subsequent requests:
 
 ```bash
 curl http://127.0.0.1:8000/api/articles/ \
-    -H "Authorization: Bearer "
+    -H "Authorization: Bearer YOUR_ACCESS_TOKEN_HERE"
 ```
 
 Refresh an expired access token:
@@ -180,7 +184,7 @@ Refresh an expired access token:
 ```bash
 curl -X POST http://127.0.0.1:8000/api/token/refresh/ \
     -H "Content-Type: application/json" \
-    -d '{"refresh": ""}'
+    -d '{"refresh": "YOUR_REFRESH_TOKEN_HERE"}'
 ```
 
 #### Endpoints
@@ -196,7 +200,10 @@ curl -X POST http://127.0.0.1:8000/api/token/refresh/ \
 | POST   | `/api/articles/<id>/approve/`     | Editor       | Approve article (triggers email + X)    |
 | GET    | `/api/newsletters/`               | Any auth     | List newsletters                        |
 | POST   | `/api/newsletters/`               | Journalist   | Create newsletter                       |
+| PUT    | `/api/newsletters/<id>/`          | Author/Editor| Update newsletter                       |
+| DELETE | `/api/newsletters/<id>/`          | Author/Editor| Delete newsletter                       |
 | GET    | `/api/publishers/`                | Any auth     | List publishers                         |
+
 
 ---
 
@@ -246,8 +253,9 @@ python manage.py test news --verbosity=2
 
 ---
 
-```
 ## Project structure
+
+```
 news_project/
 ├── manage.py
 ├── requirements.txt
@@ -256,37 +264,40 @@ news_project/
 ├── diagrams/
 │   ├── use_case_diagram.png
 │   ├── class_diagram.png
-│   └── sequence_diagram.png
+│   ├── sequence_diagram_crud.png
+│   └── sequence_diagram_approval.png
+├── screenshots/
+│   └── ...
 ├── news_project/
 │   ├── settings.py
 │   ├── urls.py
 │   └── ...
 └── news/
-├── models.py          # CustomUser, Publisher, Article, Newsletter
-├── views.py           # Web (template) views
-├── api_views.py       # DRF viewsets
-├── serializers.py     # DRF serializers
-├── permissions.py     # Custom DRF permission classes
-├── forms.py           # Registration form
-├── signals.py         # post_save approval handler
-├── services.py        # Email + X integration helpers
-├── apps.py            # Connects signals at startup
-├── admin.py           # Admin registrations
-├── urls.py            # Web URLs
-├── api_urls.py        # API URLs (JWT + router)
-├── tests.py           # 25+ automated tests
-├── migrations/
-│   ├── 0001_initial.py
-│   ├── 0002_create_role_groups.py     # Data migration
-│   └── 0003_<...>.py
-└── templates/
-├── registration/
-│   ├── login.html
-│   └── register.html
-└── news/
-├── base.html
-├── home.html
-└── ...
+    ├── models.py          # CustomUser, Publisher, Article, Newsletter
+    ├── views.py           # Web (template) views
+    ├── api_views.py       # DRF viewsets
+    ├── serializers.py     # DRF serializers
+    ├── permissions.py     # Custom DRF permission classes
+    ├── forms.py           # Registration form
+    ├── signals.py         # post_save approval handler
+    ├── services.py        # Email + X integration helpers
+    ├── apps.py            # Connects signals at startup
+    ├── admin.py           # Admin registrations
+    ├── urls.py            # Web URLs
+    ├── api_urls.py        # API URLs (JWT + router)
+    ├── tests.py           # 25+ automated tests
+    ├── migrations/
+    │   ├── 0001_initial.py
+    │   ├── 0002_create_role_groups.py
+    │   └── 0003_publisher_article_newsletter.py
+    └── templates/
+        ├── registration/
+        │   ├── login.html
+        │   └── register.html
+        └── news/
+            ├── base.html
+            ├── home.html
+            └── ...
 ```
 
 ---

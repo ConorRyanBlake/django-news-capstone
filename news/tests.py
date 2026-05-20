@@ -490,3 +490,80 @@ class SignalLogicTests(APITestBase):
         )
         self.mock_mail.assert_not_called()
         self.mock_tweet.assert_not_called()
+
+
+# ---------------------------------------------------------------------
+# 8. Resubmission additions — Publisher CRUD + Journalist Dashboard
+# ---------------------------------------------------------------------
+
+
+class PublisherFrontEndTests(APITestBase):
+    """Publishers can be managed from the front end by editors;
+    readers/journalists can view but not modify."""
+
+    def test_anyone_authenticated_can_view_publisher_list(self):
+        self.client.force_login(self.reader)
+        resp = self.client.get(reverse("publisher-list"))
+        self.assertEqual(resp.status_code, 200)
+
+    def test_editor_can_create_publisher(self):
+        self.client.force_login(self.editor)
+        resp = self.client.post(
+            reverse("publisher-create"),
+            {"name": "New Press", "description": "A new outlet."},
+        )
+        # Redirects on success
+        self.assertEqual(resp.status_code, 302)
+        self.assertTrue(Publisher.objects.filter(name="New Press").exists())
+
+    def test_journalist_cannot_create_publisher(self):
+        self.client.force_login(self.journalist)
+        resp = self.client.post(
+            reverse("publisher-create"),
+            {"name": "Should Fail", "description": "..."},
+        )
+        # UserPassesTestMixin returns 403
+        self.assertEqual(resp.status_code, 403)
+
+    def test_reader_cannot_create_publisher(self):
+        self.client.force_login(self.reader)
+        resp = self.client.post(
+            reverse("publisher-create"),
+            {"name": "Should Fail", "description": "..."},
+        )
+        self.assertEqual(resp.status_code, 403)
+
+
+class JournalistDashboardTests(APITestBase):
+    """The journalist dashboard lists the user's own articles
+    including drafts."""
+
+    def test_journalist_sees_own_drafts_on_dashboard(self):
+        self.client.force_login(self.journalist)
+        resp = self.client.get(reverse("journalist-dashboard"))
+        self.assertEqual(resp.status_code, 200)
+        # The pending_article from setUp is by this journalist
+        self.assertContains(resp, "Pending Story")
+        self.assertContains(resp, "Approved Story")
+
+    def test_journalist_does_not_see_other_journalists_articles(self):
+        self.client.force_login(self.other_journalist)
+        resp = self.client.get(reverse("journalist-dashboard"))
+        # other_journalist has no articles in setUp
+        self.assertNotContains(resp, "Pending Story")
+        self.assertNotContains(resp, "Approved Story")
+
+    def test_journalist_can_edit_own_draft(self):
+        """Explicit verification of the mentor's main point:
+        journalists must be able to edit unapproved drafts."""
+        self.client.force_login(self.journalist)
+        resp = self.client.get(
+            reverse("article-update", args=[self.pending_article.pk])
+        )
+        self.assertEqual(resp.status_code, 200)
+
+    def test_reader_cannot_access_journalist_dashboard(self):
+        self.client.force_login(self.reader)
+        resp = self.client.get(reverse("journalist-dashboard"))
+        # JournalistRequiredMixin returns 403
+        self.assertEqual(resp.status_code, 403)
