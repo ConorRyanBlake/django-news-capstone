@@ -17,6 +17,7 @@ class RegistrationForm(UserCreationForm):
     SIGNUP_ROLES = [
         (CustomUser.Role.READER, "Reader"),
         (CustomUser.Role.JOURNALIST, "Journalist"),
+        (CustomUser.Role.EDITOR, "Editor"),
     ]
 
     role = forms.ChoiceField(
