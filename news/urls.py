@@ -26,6 +26,11 @@ urlpatterns = [
     path("articles/<int:pk>/approve/", views.approve_article, name="article-approve"),
     # Editor dashboard
     path("editor/", views.EditorDashboardView.as_view(), name="editor-dashboard"),
+    path(
+        "journalist/",
+        views.JournalistDashboardView.as_view(),
+        name="journalist-dashboard",
+    ),
     # Newsletters
     path("newsletters/", views.NewsletterListView.as_view(), name="newsletter-list"),
     path(

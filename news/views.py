@@ -195,6 +195,19 @@ class EditorDashboardView(EditorRequiredMixin, ListView):
         return Article.objects.filter(approved=False)
 
 
+class JournalistDashboardView(JournalistRequiredMixin, ListView):
+    """Journalist's own-articles dashboard — shows both approved
+    and pending articles authored by the current user, giving them
+    a single place to manage their drafts."""
+
+    model = Article
+    template_name = "news/journalist_dashboard.html"
+    context_object_name = "my_articles"
+
+    def get_queryset(self):
+        return Article.objects.filter(author=self.request.user).order_by("-created_at")
+
+
 # ---------------------------------------------------------------------
 # Newsletter views (mirror article views, lighter)
 # ---------------------------------------------------------------------

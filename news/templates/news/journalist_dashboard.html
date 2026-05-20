@@ -1,0 +1,55 @@
+{% extends "news/base.html" %}
+{% block title %}My articles{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>My articles</h2>
+    <a href="{% url 'article-create' %}" class="btn btn-success">
+        + New article
+    </a>
+</div>
+
+<p class="text-muted">
+    All articles you've authored, including drafts awaiting editor
+    approval.
+</p>
+
+{% if my_articles %}
+    <ul class="list-group">
+        {% for article in my_articles %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-1">
+                        <a href="{% url 'article-detail' article.pk %}"
+                           class="text-decoration-none">
+                            {{ article.title }}
+                        </a>
+                        {% if article.approved %}
+                            <span class="badge bg-success">Published</span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark">Pending</span>
+                        {% endif %}
+                    </h5>
+                    <small class="text-muted">
+                        {% if article.publisher %}
+                            {{ article.publisher.name }} ·
+                        {% endif %}
+                        {{ article.created_at|date:"d M Y H:i" }}
+                    </small>
+                </div>
+                <div>
+                    <a href="{% url 'article-update' article.pk %}"
+                       class="btn btn-sm btn-outline-secondary">Edit</a>
+                    <a href="{% url 'article-delete' article.pk %}"
+                       class="btn btn-sm btn-outline-danger">Delete</a>
+                </div>
+            </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <div class="alert alert-info">
+        You haven't written any articles yet.
+        <a href="{% url 'article-create' %}">Start one now.</a>
+    </div>
+{% endif %}
+{% endblock %}
