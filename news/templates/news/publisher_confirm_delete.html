@@ -1,0 +1,19 @@
+{% extends "news/base.html" %}
+{% block title %}Delete publisher{% endblock %}
+
+{% block content %}
+<div class="card border-danger">
+    <div class="card-body">
+        <h3 class="card-title text-danger">Delete publisher</h3>
+        <p>Are you sure you want to delete
+            "<strong>{{ object.name }}</strong>"?
+            Articles tied to this publisher will become independent.</p>
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">Yes, delete</button>
+            <a href="{% url 'publisher-detail' object.pk %}"
+               class="btn btn-outline-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

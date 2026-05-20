@@ -1,0 +1,63 @@
+{% extends "news/base.html" %}
+{% block title %}{{ publisher.name }}{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm mb-3">
+    <div class="card-body">
+        <h1 class="card-title">{{ publisher.name }}</h1>
+        <p>{{ publisher.description|linebreaks }}</p>
+
+        <h5 class="mt-4">Editors</h5>
+        {% if publisher.editors.all %}
+            <ul>
+                {% for editor in publisher.editors.all %}
+                    <li>{{ editor.username }}</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="text-muted small">No editors assigned.</p>
+        {% endif %}
+
+        <h5 class="mt-3">Journalists</h5>
+        {% if publisher.journalists.all %}
+            <ul>
+                {% for journo in publisher.journalists.all %}
+                    <li>{{ journo.username }}</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="text-muted small">No journalists assigned.</p>
+        {% endif %}
+
+        <h5 class="mt-3">Recent articles</h5>
+        {% if publisher.articles.all %}
+            <ul>
+                {% for article in publisher.articles.all|slice:":5" %}
+                    <li>
+                        <a href="{% url 'article-detail' article.pk %}">
+                            {{ article.title }}
+                        </a>
+                        {% if not article.approved %}
+                            <span class="badge bg-warning text-dark">Pending</span>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="text-muted small">No articles yet.</p>
+        {% endif %}
+    </div>
+</div>
+
+<div>
+    <a href="{% url 'publisher-list' %}" class="btn btn-outline-secondary">
+        ← Back to publishers
+    </a>
+    {% if user.is_authenticated and user.is_editor %}
+        <a href="{% url 'publisher-update' publisher.pk %}"
+           class="btn btn-secondary">Edit</a>
+        <a href="{% url 'publisher-delete' publisher.pk %}"
+           class="btn btn-outline-danger">Delete</a>
+    {% endif %}
+</div>
+{% endblock %}

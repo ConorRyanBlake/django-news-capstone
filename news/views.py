@@ -25,7 +25,7 @@ from django.views.generic import (
 )
 
 from .forms import RegistrationForm
-from .models import Article, Newsletter
+from .models import Article, Newsletter, Publisher
 
 # ---------------------------------------------------------------------
 # Authentication
@@ -250,3 +250,61 @@ class NewsletterDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
         if user.is_editor():
             return True
         return user.is_journalist() and nl.author == user
+
+
+# ---------------------------------------------------------------------
+# Publisher views
+# ---------------------------------------------------------------------
+
+
+class PublisherListView(ListView):
+    """Public list of all publishers — readers browse to choose
+    who to subscribe to; editors use this as the entry point for
+    managing publishers."""
+
+    model = Publisher
+    template_name = "news/publisher_list.html"
+    context_object_name = "publishers"
+
+
+class PublisherDetailView(DetailView):
+    """Single publisher page — shows editors, journalists, and
+    recent articles for the publisher."""
+
+    model = Publisher
+    template_name = "news/publisher_detail.html"
+    context_object_name = "publisher"
+
+
+class PublisherCreateView(EditorRequiredMixin, CreateView):
+    """Editors create publishers."""
+
+    model = Publisher
+    template_name = "news/publisher_form.html"
+    fields = ["name", "description", "editors", "journalists"]
+    success_url = reverse_lazy("publisher-list")
+
+    def form_valid(self, form):
+        messages.success(self.request, "Publisher created.")
+        return super().form_valid(form)
+
+
+class PublisherUpdateView(EditorRequiredMixin, UpdateView):
+    """Editors edit publishers."""
+
+    model = Publisher
+    template_name = "news/publisher_form.html"
+    fields = ["name", "description", "editors", "journalists"]
+    success_url = reverse_lazy("publisher-list")
+
+    def form_valid(self, form):
+        messages.success(self.request, "Publisher updated.")
+        return super().form_valid(form)
+
+
+class PublisherDeleteView(EditorRequiredMixin, DeleteView):
+    """Editors delete publishers."""
+
+    model = Publisher
+    template_name = "news/publisher_confirm_delete.html"
+    success_url = reverse_lazy("publisher-list")

@@ -48,4 +48,24 @@ urlpatterns = [
         views.NewsletterDeleteView.as_view(),
         name="newsletter-delete",
     ),
+    # Publishers
+    path("publishers/", views.PublisherListView.as_view(), name="publisher-list"),
+    path(
+        "publishers/new/", views.PublisherCreateView.as_view(), name="publisher-create"
+    ),
+    path(
+        "publishers/<int:pk>/",
+        views.PublisherDetailView.as_view(),
+        name="publisher-detail",
+    ),
+    path(
+        "publishers/<int:pk>/edit/",
+        views.PublisherUpdateView.as_view(),
+        name="publisher-update",
+    ),
+    path(
+        "publishers/<int:pk>/delete/",
+        views.PublisherDeleteView.as_view(),
+        name="publisher-delete",
+    ),
 ]
