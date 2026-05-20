@@ -567,3 +567,21 @@ class JournalistDashboardTests(APITestBase):
         resp = self.client.get(reverse("journalist-dashboard"))
         # JournalistRequiredMixin returns 403
         self.assertEqual(resp.status_code, 403)
+
+    def test_journalist_sees_own_drafts_in_article_list(self):
+        """The standard /articles/ page should include the journalist's
+        own pending drafts, not just approved articles."""
+        self.client.force_login(self.journalist)
+        resp = self.client.get(reverse("article-list"))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, "Pending Story")
+        self.assertContains(resp, "Approved Story")
+
+    def test_journalist_can_view_own_draft_detail(self):
+        """Clicking through to a draft from any list should work,
+        not 404."""
+        self.client.force_login(self.journalist)
+        resp = self.client.get(
+            reverse("article-detail", args=[self.pending_article.pk])
+        )
+        self.assertEqual(resp.status_code, 200)

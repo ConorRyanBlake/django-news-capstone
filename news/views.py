@@ -75,17 +75,40 @@ class ArticleListView(ListView):
     paginate_by = 10
 
     def get_queryset(self):
-        qs = Article.objects.filter(approved=True)
+        """Visibility rules:
+        - Editors see everything (approved + pending) so they can
+            review submissions.
+        - Journalists see approved articles PLUS their own pending
+            drafts, so they can keep working on them.
+        - Readers see only approved articles, filtered to their
+            subscriptions if they have any.
+        - Anonymous visitors see only approved articles.
+        """
         user = self.request.user
-        # If logged-in reader, filter to their subscriptions.
+
+        # Editors see the full list.
+        if user.is_authenticated and user.is_editor():
+            return Article.objects.all()
+
+        # Journalists: approved articles + their own drafts.
+        if user.is_authenticated and user.is_journalist():
+            return Article.objects.filter(approved=True) | Article.objects.filter(
+                author=user
+            )
+
+        # Readers with subscriptions: only their subscribed content.
         if user.is_authenticated and user.is_reader():
+            qs = Article.objects.filter(approved=True)
             pub_ids = user.subscribed_publishers.values_list("id", flat=True)
             jrn_ids = user.subscribed_journalists.values_list("id", flat=True)
             if pub_ids or jrn_ids:
                 qs = qs.filter(publisher_id__in=pub_ids) | qs.filter(
                     author_id__in=jrn_ids
                 )
-        return qs.distinct()
+            return qs.distinct()
+
+        # Anonymous / fallback: approved only.
+        return Article.objects.filter(approved=True)
 
 
 class ArticleDetailView(DetailView):
@@ -94,11 +117,14 @@ class ArticleDetailView(DetailView):
     context_object_name = "article"
 
     def get_queryset(self):
-        # Non-editors can only view approved articles.
+        """Editors see anything; journalists see approved + own drafts;
+        everyone else sees only approved."""
         qs = super().get_queryset()
         user = self.request.user
         if user.is_authenticated and user.is_editor():
             return qs
+        if user.is_authenticated and user.is_journalist():
+            return qs.filter(approved=True) | qs.filter(author=user)
         return qs.filter(approved=True)
 
 
