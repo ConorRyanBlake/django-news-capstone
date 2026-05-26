@@ -76,7 +76,7 @@ Level 2 course.
 
 ```bash
 git clone https://github.com/ConorRyanBlake/django-news-capstone
-cd news-platform
+cd django-news-capstone
 python -m venv venv
 
 # Windows

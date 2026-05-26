@@ -25,6 +25,11 @@ class CustomUser(AbstractUser):
         JOURNALIST = "journalist", "Journalist"
         EDITOR = "editor", "Editor"
 
+    # Override email from AbstractUser to enforce uniqueness —
+    # required because the approval signal emails subscribers
+    # and would mis-deliver if two users shared an address.
+    email = models.EmailField(unique=True)
+
     role = models.CharField(
         max_length=20,
         choices=Role.choices,

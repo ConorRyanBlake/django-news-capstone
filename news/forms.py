@@ -7,13 +7,13 @@ from .models import CustomUser
 
 
 class RegistrationForm(UserCreationForm):
-    """Sign-up form that also asks the user what role they want.
+    """Sign-up form that asks the user which role they want.
 
-    Editors are deliberately not selectable here — editor accounts
-    are created by superusers in the admin to prevent self-promotion.
+    All three roles (Reader, Journalist, Editor) are selectable so
+    that the application supports all required user personas from
+    the front end.
     """
 
-    # Only let new users sign up as reader or journalist.
     SIGNUP_ROLES = [
         (CustomUser.Role.READER, "Reader"),
         (CustomUser.Role.JOURNALIST, "Journalist"),
@@ -30,6 +30,19 @@ class RegistrationForm(UserCreationForm):
     class Meta:
         model = CustomUser
         fields = ("username", "email", "role", "password1", "password2")
+
+    def clean_email(self):
+        """Reject sign-ups where the email is already in use.
+
+        The model has a unique constraint on email, so duplicates
+        would raise IntegrityError at save time. Catching them here
+        surfaces a clean form-level error instead, which renders
+        next to the email field in the template.
+        """
+        email = self.cleaned_data.get("email")
+        if CustomUser.objects.filter(email__iexact=email).exists():
+            raise forms.ValidationError("An account with this email already exists.")
+        return email
 
     def save(self, commit=True):
         """Save the user with their chosen role.
