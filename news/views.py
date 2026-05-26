@@ -26,6 +26,7 @@ from django.views.generic import (
 
 from .forms import RegistrationForm
 from .models import Article, Newsletter, Publisher
+from django import forms as django_forms
 
 # ---------------------------------------------------------------------
 # Authentication
@@ -142,7 +143,16 @@ class EditorRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
         return self.request.user.is_editor()
 
 
-class ArticleCreateView(JournalistRequiredMixin, CreateView):
+class JournalistOrEditorRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
+    """Allow journalists and editors. Used for content creation
+    from the web interface — readers cannot create."""
+
+    def test_func(self):
+        user = self.request.user
+        return user.is_journalist() or user.is_editor()
+
+
+class ArticleCreateView(JournalistOrEditorRequiredMixin, CreateView):
     model = Article
     template_name = "news/article_form.html"
     fields = ["title", "content", "publisher"]
@@ -151,7 +161,13 @@ class ArticleCreateView(JournalistRequiredMixin, CreateView):
     def form_valid(self, form):
         # Author is always the current user, never picked from a form.
         form.instance.author = self.request.user
-        messages.success(self.request, "Article submitted for review.")
+        # Editors creating articles can self-approve immediately.
+        # Journalists must wait for editor review.
+        if self.request.user.is_editor():
+            form.instance.approved = True
+            messages.success(self.request, "Article published.")
+        else:
+            messages.success(self.request, "Article submitted for review.")
         return super().form_valid(form)
 
 
@@ -190,8 +206,9 @@ class ArticleDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 def approve_article(request, pk):
     """Editor flips an article from unapproved to approved.
 
-    Phase 7 will hook a post_save signal here that emails subscribers
-    and posts to X. For now, approval just sets the flag and redirects.
+    The post_save signal on Article (see news/signals.py) detects
+    the False -> True transition and fans out to email subscribers
+    and post a tweet to X.
     """
     if not request.user.is_editor():
         messages.error(request, "Only editors can approve articles.")
@@ -239,6 +256,24 @@ class JournalistDashboardView(JournalistRequiredMixin, ListView):
 # ---------------------------------------------------------------------
 
 
+class NewsletterForm(django_forms.ModelForm):
+    """Newsletter form that restricts the article choices to
+    approved articles only.
+
+    Mentor feedback: only approved articles should be addable to
+    newsletters. Without this override, the default ModelForm shows
+    every article including unapproved drafts.
+    """
+
+    class Meta:
+        model = Newsletter
+        fields = ["title", "description", "publisher", "articles"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["articles"].queryset = Article.objects.filter(approved=True)
+
+
 class NewsletterListView(ListView):
     model = Newsletter
     template_name = "news/newsletter_list.html"
@@ -254,8 +289,8 @@ class NewsletterDetailView(DetailView):
 
 class NewsletterCreateView(JournalistRequiredMixin, CreateView):
     model = Newsletter
+    form_class = NewsletterForm
     template_name = "news/newsletter_form.html"
-    fields = ["title", "description", "publisher", "articles"]
     success_url = reverse_lazy("newsletter-list")
 
     def form_valid(self, form):
@@ -266,8 +301,8 @@ class NewsletterCreateView(JournalistRequiredMixin, CreateView):
 
 class NewsletterUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Newsletter
+    form_class = NewsletterForm
     template_name = "news/newsletter_form.html"
-    fields = ["title", "description", "publisher", "articles"]
     success_url = reverse_lazy("newsletter-list")
 
     def test_func(self):
