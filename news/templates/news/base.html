@@ -33,10 +33,12 @@
                         <a class="nav-link text-info" href="{% url 'journalist-dashboard' %}">My articles</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'article-create' %}">New article</a>
-                    </li>
-                    <li class="nav-item">
                         <a class="nav-link" href="{% url 'newsletter-create' %}">New newsletter</a>
+                    </li>
+                    {% endif %}
+                    {% if user.is_authenticated and user.is_journalist or user.is_editor %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'article-create' %}">New article</a>
                     </li>
                     {% endif %}
                     {% if user.is_authenticated and user.is_editor %}

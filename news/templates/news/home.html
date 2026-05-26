@@ -2,6 +2,16 @@
 {% block title %}News Platform — Home{% endblock %}
 
 {% block content %}
+{% if user.is_authenticated and user.is_editor %}
+<div class="alert alert-warning d-flex justify-content-between align-items-center">
+    <div>
+        <strong>Editor:</strong> approve pending articles to publish them.
+    </div>
+    <a href="{% url 'editor-dashboard' %}" class="btn btn-warning btn-sm">
+        Go to dashboard
+    </a>
+</div>
+{% endif %}
 <div class="p-5 mb-4 bg-white rounded-3 shadow-sm">
     <h1 class="display-5 fw-bold">Welcome to the News Platform</h1>
     <p class="lead">
@@ -15,31 +25,30 @@
 
 <h2 class="mb-3">Latest stories</h2>
 {% if latest_articles %}
-    <div class="row">
-        {% for article in latest_articles %}
-            <div class="col-md-6 mb-3">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <h5 class="card-title">
-                            <a href="{% url 'article-detail' article.pk %}"
-                               class="text-decoration-none">{{ article.title }}</a>
-                        </h5>
-                        <p class="text-muted small mb-2">
-                            By {{ article.author.username }}
-                            {% if article.publisher %}
-                                · {{ article.publisher.name }}
-                            {% endif %}
-                            · {{ article.created_at|date:"d M Y" }}
-                        </p>
-                        <p class="card-text">
-                            {{ article.content|truncatewords:25 }}
-                        </p>
-                    </div>
-                </div>
+<div class="row">
+    {% for article in latest_articles %}
+    <div class="col-md-6 mb-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <a href="{% url 'article-detail' article.pk %}" class="text-decoration-none">{{ article.title }}</a>
+                </h5>
+                <p class="text-muted small mb-2">
+                    By {{ article.author.username }}
+                    {% if article.publisher %}
+                    · {{ article.publisher.name }}
+                    {% endif %}
+                    · {{ article.created_at|date:"d M Y" }}
+                </p>
+                <p class="card-text">
+                    {{ article.content|truncatewords:25 }}
+                </p>
             </div>
-        {% endfor %}
+        </div>
     </div>
+    {% endfor %}
+</div>
 {% else %}
-    <p class="text-muted">No articles published yet.</p>
+<p class="text-muted">No articles published yet.</p>
 {% endif %}
 {% endblock %}

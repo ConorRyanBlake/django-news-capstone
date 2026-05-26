@@ -51,7 +51,7 @@ Level 2 course.
 | View approved articles          |   ✓    |     ✓      |   ✓    |
 | View own draft articles         |        |     ✓      |   ✓    |
 | View all draft articles         |        |            |   ✓    |
-| Create article                  |        |     ✓      |        |
+| Create article                  |        |     ✓      |   ✓     |
 | Edit own article (drafts too)   |        |     ✓      |   ✓    |
 | Edit any article                |        |            |   ✓    |
 | Delete own article (drafts too) |        |     ✓      |   ✓    |
@@ -61,6 +61,7 @@ Level 2 course.
 | Create / edit / delete publisher|        |            |   ✓    |
 | Subscribe to publisher          |   ✓    |            |        |
 | Subscribe to journalist         |   ✓    |            |        |
+| Editor-created article auto-approved |   |            |   ✓    |
 
 ---
 

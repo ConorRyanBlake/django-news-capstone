@@ -295,6 +295,33 @@ class JournalistCreateTests(APITestBase):
         )
         self.assertEqual(resp.status_code, status.HTTP_401_UNAUTHORIZED)
 
+    def test_duplicate_email_rejected_on_registration(self):
+        """Registering with an email already in use should fail."""
+        # reader1@example.com is already used by self.reader.
+        resp = self.client.post(
+            reverse("register"),
+            {
+                "username": "newuser",
+                "email": "reader1@example.com",
+                "role": "reader",
+                "password1": "complex-test-pass-123",
+                "password2": "complex-test-pass-123",
+            },
+        )
+        # Form should redisplay, not redirect.
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, "already exists")
+
+    def test_newsletter_form_only_shows_approved_articles(self):
+        """The newsletter create form should not allow selecting
+        unapproved articles."""
+        self.client.force_login(self.journalist)
+        resp = self.client.get(reverse("newsletter-create"))
+        self.assertEqual(resp.status_code, 200)
+        # The pending article should not appear as a selectable option.
+        self.assertNotContains(resp, "Pending Story</option>")
+        self.assertContains(resp, "Approved Story")
+
 
 # ---------------------------------------------------------------------
 # 5. Editor approves and deletes
@@ -375,6 +402,23 @@ class EditorActionsTests(APITestBase):
             reverse("api:article-detail", args=[self.approved_article.id]),
         )
         self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_editor_can_create_article_and_auto_approve(self):
+        """Editors can also create articles, and their articles
+        are auto-approved on save."""
+        self.client.force_login(self.editor)
+        resp = self.client.post(
+            reverse("article-create"),
+            {
+                "title": "Editor's piece",
+                "content": "Editor-authored content.",
+                "publisher": self.publisher.id,
+            },
+        )
+        self.assertEqual(resp.status_code, 302)
+        article = Article.objects.get(title="Editor's piece")
+        self.assertTrue(article.approved)
+        self.assertEqual(article.author, self.editor)
 
 
 # ---------------------------------------------------------------------
